@@ -1,0 +1,225 @@
+
+@import url('https://fonts.googleapis.com/css2?family=New+Rocker&family=M+PLUS+1p:wght@400;700&display=swap');
+
+:root{
+  --bg: #0b0b0b;
+  --card: rgba(255,255,255,0.85);
+  --muted-white: rgba(255,255,255,0.12);
+  --accent: #fff;
+}
+
+/* Reset */
+*{ box-sizing: border-box; margin:0; padding:0; }
+html,body,#root{ height:100%; }
+body{
+  background: var(--bg);
+  color: var(--accent);
+  font-family: "M PLUS 1p", sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+
+/* NAVBAR */
+.navbar{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  z-index:40;
+  background: #212121;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+  backdrop-filter: blur(6px);
+}
+
+.navbar-inner{
+  max-width:1300px;
+  margin:0 auto;
+  padding:18px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+/* left / right menus */
+.menu-left, .menu-right{
+  display:flex;
+  gap:28px;
+  align-items:center;
+  list-style:none;
+}
+
+.menu-left a{
+  color:var(--accent);
+  text-decoration:none;
+  letter-spacing:1.5px;
+  font-weight:700;
+  font-size:13px;
+}
+
+/* brand centered */
+.logo-wrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex:1;
+  pointer-events:none;
+}
+
+.logo{
+  font-family: "New Rocker", cursive;
+  font-size:36px;
+  color:var(--accent);
+  letter-spacing:1px;
+  margin:0;
+}
+
+/* right extras */
+.cart-icon{ width:22px; filter: invert(1); }
+.login-btn{
+  background:transparent;
+  color:var(--accent);
+  border:1px solid rgba(255,255,255,0.12);
+  padding:8px 14px;
+  border-radius:6px;
+  font-weight:700;
+  cursor:pointer;
+  transition: all .15s ease;
+}
+.login-btn:hover{ transform:translateY(-2px); }
+
+/* HERO (space below navbar) */
+.hero{
+  margin-top:88px; /* espaço p/ navbar */
+  position:relative;
+  min-height:calc(100vh - 120px);
+  padding:30px 20px 80px;
+}
+
+/* sidebars */
+.sidebar{
+  position:fixed;
+  top:0;
+  bottom:0;
+  width:18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  backdrop-filter: blur(6px);
+  z-index:20;
+}
+.sidebar.left{ left:0; }
+.sidebar.right{ right:0; }
+
+/* highlight trapezoid (brand) */
+.highlight{
+  display:flex;
+  justify-content:center;
+  margin-top:10px;
+  z-index:15;
+  position:relative;
+  pointer-events:none;
+}
+
+.highlight-inner{
+  transform: translateY(6px);
+  background: rgba(255,255,255,0.85);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  padding: 6px 46px;
+  clip-path: polygon(15% 0, 85% 0, 100% 100%, 0% 100%); /* trapezio invertido */
+  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+}
+
+.highlight-text{
+  font-family: "New Rocker", cursive;
+  color:#0b0b0b;
+  font-size:56px;
+  line-height:1;
+  display:block;
+  letter-spacing:1px;
+}
+
+/* hero content */
+.hero-content{
+  position:relative;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  gap:40px;
+  margin-top:28px;
+}
+
+/* banners stack */
+.banners{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  align-items:center;
+  z-index:5;
+}
+
+.banner-wrap{
+  position:relative;
+  width:100%;
+  max-width:1100px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.banner{
+  width:100%;
+  height:auto;
+  display:block;
+  opacity:0.14;
+  filter: contrast(1.05) saturate(1.02);
+  border-radius:6px;
+  transform: translateY(0);
+}
+
+/* NEW DROP text over banners */
+.new-drop{
+  position:absolute;
+  font-family: "New Rocker", cursive;
+  font-size:48px;
+  color: rgba(255,255,255,0.95);
+  letter-spacing:2px;
+  text-transform:uppercase;
+  pointer-events:none;
+  mix-blend-mode:screen;
+  text-shadow: 0 6px 18px rgba(0,0,0,0.45);
+}
+
+/* Mascot (overlapping, centered) */
+.mascot{
+  position:absolute;
+  left:50%;
+  transform: translateX(-50%);
+  bottom: -8%;
+  width:420px;
+  max-width:42vw;
+  z-index:30;
+  pointer-events:none;
+  filter: drop-shadow(0 18px 40px rgba(0,0,0,0.6));
+}
+
+/* small screens */
+@media (max-width: 980px){
+  .highlight-text{ font-size:44px; padding:0; }
+  .logo{ font-size:30px; }
+  .navbar-inner{ padding:14px 18px; }
+  .banner-wrap{ max-width:900px; }
+  .mascot{ width:320px; bottom:-6%; }
+  .new-drop{ font-size:38px; }
+}
+
+@media (max-width: 600px){
+  .menu-left{ display:none; }
+  .logo{ font-size:28px; }
+  .hero{ padding:18px 12px 60px; margin-top:78px; }
+  .highlight-text{ font-size:34px; padding:6px 30px; }
+  .banner-wrap{ max-width:340px; }
+  .banner{ opacity:0.18; border-radius:8px; }
+  .mascot{ width:220px; bottom:-2%; }
+  .new-drop{ font-size:22px; }
+  .sidebar{ display:none; }
+}

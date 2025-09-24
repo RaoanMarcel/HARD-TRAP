@@ -1,0 +1,132 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model addresses {
+  id         Int     @id @default(autoincrement())
+  user_id    Int
+  street     String  @db.VarChar(200)
+  number     String? @db.VarChar(20)       
+  complement String? @db.VarChar(100)     
+  neighborhood String? @db.VarChar(100)   
+  city       String  @db.VarChar(100)
+  state      String  @db.VarChar(100)
+  zip_code   String  @db.VarChar(20)
+  country    String  @db.VarChar(100)
+  recipient_name String? @db.VarChar(150)  
+  phone      String? @db.VarChar(30)       
+
+  user   users   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  orders orders[]
+
+  @@map("addresses")
+  @@index([user_id]) 
+}
+
+model order_items {
+  id         Int      @id @default(autoincrement())
+  order_id   Int
+  product_id Int
+  quantity   Int      @default(1)
+  price      Decimal  @db.Decimal(10, 2)
+
+  order   orders  @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product product @relation(fields: [product_id], references: [id], onDelete: NoAction)
+
+  @@map("order_items")
+  @@index([order_id])   
+  @@index([product_id]) 
+}
+
+model orders {
+  id               Int          @id @default(autoincrement())
+  user_id          Int
+  status           String       @default("pending") @db.VarChar(50)
+  total            Decimal      @db.Decimal(10, 2)
+  address_id       Int?
+  shipping_cost    Decimal?     @db.Decimal(10,2)
+  shipping_service String?
+  tracking_code    String?      @db.VarChar(100) 
+  created_at       DateTime     @default(now()) @db.Timestamp(6)
+
+  address     addresses?   @relation(fields: [address_id], references: [id])
+  order_items order_items[]
+  payments    payments[]
+  user        users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  status_logs order_status_history[] 
+
+  @@map("orders")
+  @@index([user_id])   
+  @@index([status])   
+  @@index([address_id])
+}
+
+model payments {
+  id               Int      @id @default(autoincrement())
+  order_id         Int
+  user_id          Int?     
+  method           String   @db.VarChar(50)
+  status           String   @default("pending") @db.VarChar(50)
+  transaction_code String?  @db.VarChar(255)
+  amount           Decimal  @db.Decimal(10, 2)
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+
+  order orders @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  user  users? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@map("payments")
+  @@index([order_id])
+  @@index([user_id])
+}
+
+model product {
+  id          Int           @id(map: "produtos_pkey") @default(autoincrement())
+  name        String        @db.VarChar(150)
+  description String?
+  price       Decimal       @db.Decimal(10, 2)
+  stock       Int           @default(0)
+  created_at  DateTime      @default(now()) @db.Timestamp(6)
+  updated_at  DateTime      @updatedAt      
+
+  order_items order_items[]
+
+  @@map("products")
+}
+
+model users {
+  id                Int       @id @default(autoincrement())
+  name              String
+  email             String    @unique
+  password_hash     String
+  role              Role      @default(CUSTOMER)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  resetToken        String?   
+  resetTokenExpires DateTime?
+
+  addresses addresses[]
+  orders    orders[]
+  payments  payments[] 
+}
+
+model order_status_history {
+  id        Int      @id @default(autoincrement())
+  order_id  Int
+  status    String   @db.VarChar(50)
+  changed_at DateTime @default(now()) @db.Timestamp(6)
+  changed_by Int?    // pode referenciar admin
+
+  order orders @relation(fields: [order_id], references: [id], onDelete: Cascade)
+
+  @@index([order_id])
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
