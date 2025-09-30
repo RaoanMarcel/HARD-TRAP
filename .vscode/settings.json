@@ -1,0 +1,44 @@
+{
+    "folder-color.pathColors": [
+        {
+            "folderPath": "HARDTRAP\\backend\\src\\controllers\\user.controller.ts\\",
+            "color": "foldercolorizer.color_66cc00"
+        },
+        {
+            "folderPath": "HARDTRAP\\backend\\src\\routes\\user.routes.ts\\",
+            "color": "foldercolorizer.color_66cc00"
+        },
+        {
+            "folderPath": "HARDTRAP\\backend\\src\\services\\user.service.ts\\",
+            "color": "foldercolorizer.color_66cc00"
+        },
+        {
+            "folderPath": "HARDTRAP\\backend\\src\\controllers\\auth.controller.ts\\",
+            "color": "foldercolorizer.color_0066ff"
+        },
+        {
+            "folderPath": "HARDTRAP\\backend\\src\\middlewares\\auth.middleware.ts\\",
+            "color": "foldercolorizer.color_0066ff"
+        },
+        {
+            "folderPath": "HARDTRAP\\backend\\src\\middlewares\\adminAuth.middleware.ts\\",
+            "color": "foldercolorizer.color_0066ff"
+        },
+        {
+            "folderPath": "HARDTRAP\\backend\\src\\controllers\\admin.controller.ts\\",
+            "color": "foldercolorizer.color_0066ff"
+        },
+        {
+            "folderPath": "HARDTRAP\\backend\\src\\services\\auth.service.ts\\",
+            "color": "foldercolorizer.color_0066ff"
+        },
+        {
+            "folderPath": "HARDTRAP\\backend\\src\\services\\admin.service.ts\\",
+            "color": "foldercolorizer.color_0066ff"
+        },
+        {
+            "folderPath": "HARDTRAP\\backend\\src\\utils\\updateAdmin.ts\\",
+            "color": "foldercolorizer.color_0066ff"
+        }
+    ]
+}

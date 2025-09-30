@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../prisma";
 
 async function main() {
   const email = "raoanmarcel@gmail.com"; // usuário que você quer tornar admin

@@ -21,7 +21,7 @@ model addresses {
   recipient_name String? @db.VarChar(150)  
   phone      String? @db.VarChar(30)       
 
-  user   users   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user    users  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   orders orders[]
 
   @@map("addresses")
@@ -57,7 +57,7 @@ model orders {
   address     addresses?   @relation(fields: [address_id], references: [id])
   order_items order_items[]
   payments    payments[]
-  user        users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
   status_logs order_status_history[] 
 
   @@map("orders")
@@ -76,8 +76,8 @@ model payments {
   amount           Decimal  @db.Decimal(10, 2)
   created_at       DateTime @default(now()) @db.Timestamp(6)
 
-  order orders @relation(fields: [order_id], references: [id], onDelete: Cascade)
-  user  users? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  user     users? @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  order    orders @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
   @@map("payments")
   @@index([order_id])
@@ -92,7 +92,9 @@ model product {
   stock       Int           @default(0)
   created_at  DateTime      @default(now()) @db.Timestamp(6)
   updated_at  DateTime      @updatedAt      
+  imageUrl    String?       @db.VarChar(255)
 
+  cart_items  CartItem[]
   order_items order_items[]
 
   @@map("products")
@@ -109,6 +111,7 @@ model users {
   resetToken        String?   
   resetTokenExpires DateTime?
 
+  carts    Cart[]
   addresses addresses[]
   orders    orders[]
   payments  payments[] 
@@ -124,6 +127,30 @@ model order_status_history {
   order orders @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
   @@index([order_id])
+}
+model Cart {
+  id         Int        @id @default(autoincrement())
+  user_id    Int        @unique       
+  items      CartItem[]
+  created_at DateTime   @default(now())
+  user     users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model CartItem {
+  id         Int      @id @default(autoincrement())
+  cart_id    Int
+  cart       Cart     @relation(fields: [cart_id], references: [id])
+  product_id Int
+  product    product  @relation(fields: [product_id], references: [id])
+  quantity   Int      @default(1)
+}
+
+model stripe_events {
+  id        Int      @id @default(autoincrement())
+  event_id  String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("stripe_events")
 }
 
 enum Role {

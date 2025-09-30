@@ -1,170 +1,145 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import crypto from "crypto";
-import { sendResetPasswordEmail } from "../utils/mailer";
+import Joi from "joi";
+import * as userService from "../services/user.service";
+import { validateRequest } from "../utils/validation.util";
 
+// 🔹 Schemas Joi
+const idParamSchema = Joi.object({
+  id: Joi.number().integer().positive().required().messages({
+    "number.base": "ID deve ser um número",
+    "number.positive": "ID deve ser positivo",
+    "any.required": "ID é obrigatório",
+  }),
+});
 
-const prisma = new PrismaClient();
+const updateUserSchema = Joi.object({
+  name: Joi.string().min(1).optional().messages({
+    "string.empty": "Nome não pode estar vazio",
+  }),
+  email: Joi.string().email().optional().messages({
+    "string.email": "E-mail inválido",
+  }),
+  password: Joi.string().min(8).optional().messages({
+    "string.min": "A senha deve ter pelo menos 8 caracteres",
+  }),
+});
 
-// Registro público (qualquer um pode usar)
-export const registerUser = async (req: Request, res: Response) => {
+const deleteUserSchema = Joi.object({
+  confirmName: Joi.string().required().messages({
+    "string.empty": "confirmName é obrigatório",
+    "any.required": "confirmName é obrigatório",
+  }),
+});
+
+const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "E-mail inválido",
+    "any.required": "E-mail é obrigatório",
+  }),
+});
+
+const resetPasswordSchema = Joi.object({
+  token: Joi.string().required().messages({
+    "string.empty": "Token é obrigatório",
+    "any.required": "Token é obrigatório",
+  }),
+  newPassword: Joi.string().min(8).required().messages({
+    "string.min": "A nova senha deve ter pelo menos 8 caracteres",
+    "any.required": "Nova senha é obrigatória",
+  }),
+});
+
+// 🔹 Buscar todos os usuários
+export const getUsers = async (_req: Request, res: Response) => {
   try {
-    const { name, email, password } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: "Todos os campos são obrigatórios" });
-    }
-
-    const existingUser = await prisma.users.findUnique({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ error: "E-mail já está em uso" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await prisma.users.create({
-      data: {
-        name,
-        email,
-        password_hash: hashedPassword, // ajustado para password_hash
-        role: "CUSTOMER",
-      },
-      select: { id: true, name: true, email: true, role: true },
-    });
-
-    res.status(201).json({ message: "Usuário criado com sucesso", user });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao registrar usuário" });
-  }
-};
-
-// Listar todos os usuários (apenas admin)
-export const getUsers = async (req: Request, res: Response) => {
-  try {
-    const users = await prisma.users.findMany({
-      select: { id: true, name: true, email: true, role: true },
-    });
+    const users = await userService.getAllUsers();
     res.json(users);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao buscar usuários" });
+  } catch (err: any) {
+    res.status(404).json({ error: err.message });
   }
 };
 
-// Buscar usuário por ID (apenas admin)
+// 🔹 Buscar usuário por ID
 export const getUserById = async (req: Request, res: Response) => {
+  const params = validateRequest(idParamSchema, req, res, "params");
+  if (!params) return;
+
   try {
-    const { id } = req.params;
-
-    const user = await prisma.users.findUnique({
-      where: { id: Number(id) },
-      select: { id: true, name: true, email: true, role: true },
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: "Usuário não encontrado" });
-    }
-
+    const user = await userService.getUserByIdService(params.id);
     res.json(user);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao buscar usuário" });
+  } catch (err: any) {
+    res.status(404).json({ error: err.message });
   }
 };
 
-// Atualizar usuário
+// 🔹 Atualizar usuário
 export const updateUser = async (req: Request, res: Response) => {
+  const params = validateRequest(idParamSchema, req, res, "params");
+  if (!params) return;
+
+  const body = validateRequest(updateUserSchema, req, res);
+  if (!body) return;
+
   try {
-    const { id } = req.params;
-    const { name, email, role } = req.body;
-
-    const user = await prisma.users.update({
-      where: { id: Number(id) },
-      data: { name, email, role },
-      select: { id: true, name: true, email: true, role: true },
-    });
-
+    const user = await userService.updateUserService(params.id, body);
     res.json(user);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao atualizar usuário" });
+  } catch (err: any) {
+    res.status(404).json({ error: err.message });
   }
 };
 
-// Deletar usuário
+// 🔹 Confirmação de delete
+export const getUserDeleteConfirmation = async (req: Request, res: Response) => {
+  const params = validateRequest(idParamSchema, req, res, "params");
+  if (!params) return;
+
+  try {
+    const user = await userService.getUserByIdService(params.id);
+    const message = `Deseja realmente excluir o usuário "${user.name}" (id: ${user.id})? Envie { "confirmName": "${user.name}" } no body para confirmar.`;
+    res.json({ message, user });
+  } catch (err: any) {
+    res.status(404).json({ error: err.message });
+  }
+};
+
+// 🔹 Deletar usuário
 export const deleteUser = async (req: Request, res: Response) => {
+  const params = validateRequest(idParamSchema, req, res, "params");
+  if (!params) return;
+
+  const body = validateRequest(deleteUserSchema, req, res);
+  if (!body) return;
+
   try {
-    const { id } = req.params;
-
-    await prisma.users.delete({ where: { id: Number(id) } });
-
-    res.json({ message: "Usuário deletado com sucesso" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao deletar usuário" });
+    const result = await userService.deleteUserService(params.id, body.confirmName);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 };
 
-// 🔑 Esqueci minha senha
+// 🔹 Esqueci minha senha
 export const forgotPassword = async (req: Request, res: Response) => {
+  const body = validateRequest(forgotPasswordSchema, req, res);
+  if (!body) return;
+
   try {
-    const { email } = req.body;
-    const user = await prisma.users.findUnique({ where: { email } });
-
-    if (!user) {
-      return res.status(404).json({ error: "Usuário não encontrado" });
-    }
-
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    const expires = new Date(Date.now() + 1000 * 60 * 15); // 15 minutos
-
-    await prisma.users.update({
-      where: { email },
-      data: { resetToken, resetTokenExpires: expires },
-    });
-
-    // 📧 Envia o email real
-    await sendResetPasswordEmail(email, resetToken);
-
-    res.json({ message: "Email de redefinição enviado" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao gerar token de recuperação" });
+    const result = await userService.generateResetToken(body.email);
+    res.json(result);
+  } catch (err: any) {
+    res.status(404).json({ error: err.message });
   }
 };
 
-// 🔑 Redefinir senha usando o token
+// 🔹 Redefinir senha
 export const resetPassword = async (req: Request, res: Response) => {
+  const body = validateRequest(resetPasswordSchema, req, res);
+  if (!body) return;
+
   try {
-    const { token, newPassword } = req.body;
-
-    const user = await prisma.users.findFirst({
-      where: {
-        resetToken: token,
-        resetTokenExpires: { gt: new Date() },
-      },
-    });
-
-    if (!user) {
-      return res.status(400).json({ error: "Token inválido ou expirado" });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    await prisma.users.update({
-      where: { id: user.id },
-      data: {
-        password_hash: hashedPassword,
-        resetToken: null,
-        resetTokenExpires: null,
-      },
-    });
-
-    res.json({ message: "Senha redefinida com sucesso" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao redefinir senha" });
+    const result = await userService.resetUserPassword(body.token, body.newPassword);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 };

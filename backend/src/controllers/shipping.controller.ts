@@ -1,26 +1,13 @@
 import { Request, Response } from "express";
-import { melhorEnvioApi } from "../utils/melhorEnvio";
+import { calculateShippingService } from "../services/shipping.service";
 
-export async function calculateShipping(req: Request, res: Response) {
+export const calculateShipping = async (req: Request, res: Response) => {
   try {
-    const { from, to, weight, height, width, length } = req.body;
-
-    const response = await melhorEnvioApi.post("/me/shipment/calculate", [
-      {
-        from: { postal_code: from },
-        to: { postal_code: to },
-        package: {
-          weight,
-          height,
-          width,
-          length,
-        },
-      },
-    ]);
-
-    return res.json(response.data);
+    const shippingData = req.body;
+    const result = await calculateShippingService(shippingData);
+    res.json(result);
   } catch (error: any) {
-    console.error("Erro ao calcular frete:", error.response?.data || error.message);
-    return res.status(500).json({ error: "Falha ao calcular frete" });
+    console.error("Erro ao calcular frete:", error.message || error);
+    res.status(500).json({ error: "Falha ao calcular frete" });
   }
-}
+};

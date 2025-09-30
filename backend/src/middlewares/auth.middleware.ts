@@ -19,8 +19,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     return res.status(401).json({ error: "Token não fornecido" });
   }
 
-  const token = authHeader.split(" ")[1]; // formato: Bearer <token>
-
+  const token = authHeader.split(" ")[1]; 
   if (!token) {
     return res.status(401).json({ error: "Token inválido" });
   }
@@ -29,6 +28,10 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     const secret = process.env.JWT_SECRET || "supersecret";
     const decoded = jwt.verify(token, secret) as JwtPayload;
 
+    // Add logging to debug token verification
+    console.log("Authorization Header:", authHeader);
+    console.log("Decoded Token:", decoded);
+
     (req as AuthRequest).user = decoded; 
     next();
   } catch (err) {
@@ -36,22 +39,22 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
   }
 };
 
-export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.headers["authorization"];
+export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
 
-  if (!authHeader) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Token não fornecido" });
   }
 
   const token = authHeader.split(" ")[1];
 
   try {
-    const secret = process.env.JWT_SECRET as string;
-    const decoded = jwt.verify(token, secret) as JwtPayload;
-    req.user = decoded;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    (req as any).user = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ error: "Token inválido ou expirado" });
+    console.error("Erro ao verificar token:", error);
+    res.status(401).json({ error: "Token inválido" });
   }
 };
 

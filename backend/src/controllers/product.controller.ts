@@ -1,100 +1,137 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import Joi from "joi";
+import {
+  createProductService,
+  uploadProductImageService,
+  getProductsService,
+  getProductByIdService,
+  decrementStockService,
+  deleteProductService
+} from "../services/product.service";
+import { validateRequest } from "../utils/validation.util";
 
-const prisma = new PrismaClient();
+// 🔹 Schemas Joi
+const createProductSchema = Joi.object({
+  name: Joi.string().trim().required().messages({
+    "string.empty": "Nome é obrigatório",
+    "any.required": "Nome é obrigatório",
+  }),
+  description: Joi.string().trim().allow("").optional(),
+  price: Joi.number().positive().required().messages({
+    "number.base": "Preço deve ser um número",
+    "number.positive": "Preço deve ser positivo",
+    "any.required": "Preço é obrigatório",
+  }),
+  stock: Joi.number().integer().min(0).required().messages({
+    "number.base": "Estoque deve ser um número",
+    "number.integer": "Estoque deve ser um número inteiro",
+    "number.min": "Estoque não pode ser negativo",
+    "any.required": "Estoque é obrigatório",
+  }),
+});
 
+const uploadProductImageSchema = Joi.object({
+  productId: Joi.number().integer().positive().required().messages({
+    "number.base": "ID do produto deve ser numérico",
+    "number.integer": "ID do produto deve ser inteiro",
+    "number.positive": "ID do produto deve ser positivo",
+    "any.required": "ID do produto é obrigatório",
+  }),
+});
+
+const updateStockSchema = Joi.object({
+  quantity: Joi.number().integer().positive().required().messages({
+    "number.base": "Quantidade deve ser numérica",
+    "number.integer": "Quantidade deve ser inteira",
+    "number.positive": "Quantidade deve ser maior que 0",
+    "any.required": "Quantidade é obrigatória",
+  }),
+});
+
+const idParamSchema = Joi.object({
+  id: Joi.number().integer().positive().required().messages({
+    "number.base": "ID deve ser numérico",
+    "number.integer": "ID deve ser inteiro",
+    "number.positive": "ID deve ser positivo",
+    "any.required": "ID é obrigatório",
+  }),
+});
+
+// 🔹 Criar produto
 export const createProduct = async (req: Request, res: Response) => {
+  const validated = validateRequest(createProductSchema, req, res);
+  if (!validated) return;
+
   try {
-    const { name, description, price, stock } = req.body;
-
-    if (!name || !price) {
-      return res.status(400).json({ error: "Nome e preço são obrigatórios" });
-    }
-
-    const product = await prisma.product.create({
-      data: { name, description, price, stock: stock || 0 },
-    });
-
+    const product = await createProductService(validated);
     res.status(201).json(product);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao criar produto" });
+  } catch (err: any) {
+    res.status(400).json({ success: false, errors: [{ field: "server", message: err.message }] });
   }
 };
 
-export const getProducts = async (req: Request, res: Response) => {
+// 🔹 Upload de imagem do produto
+export const uploadProductImage = async (req: Request, res: Response) => {
+  const validated = validateRequest(uploadProductImageSchema, req, res);
+  if (!validated) return;
+
   try {
-    const products = await prisma.product.findMany();
+    const file = (req as any).file as Express.Multer.File | undefined;
+    const product = await uploadProductImageService(validated.productId, file?.path || "");
+    res.status(200).json({ message: "Imagem enviada com sucesso", product });
+  } catch (err: any) {
+    res.status(400).json({ success: false, errors: [{ field: "server", message: err.message }] });
+  }
+};
+
+// 🔹 Listar produtos
+export const getProducts = async (_: Request, res: Response) => {
+  try {
+    const products = await getProductsService();
     res.json(products);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao buscar produtos" });
+  } catch (err: any) {
+    res.status(500).json({ success: false, errors: [{ field: "server", message: err.message }] });
   }
 };
 
+// 🔹 Buscar produto por ID
 export const getProductById = async (req: Request, res: Response) => {
+  const validated = validateRequest(idParamSchema, req, res, "params");
+  if (!validated) return;
+
   try {
-    const { id } = req.params;
-    const product = await prisma.product.findUnique({
-      where: { id: Number(id) },
-    });
-
-    if (!product) {
-      return res.status(404).json({ error: "Produto não encontrado" });
-    }
-
+    const product = await getProductByIdService(validated.id);
     res.json(product);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao buscar produto" });
+  } catch (err: any) {
+    res.status(404).json({ success: false, errors: [{ field: "server", message: err.message }] });
   }
 };
 
-export async function decrementStock(productId: number, quantity: number) {
-  const updated = await prisma.product.updateMany({
-    where: {
-      id: productId,
-      stock: { gte: quantity },
-    },
-    data: {
-      stock: { decrement: quantity },
-    },
-  });
-
-  if (updated.count === 0) {
-    throw new Error("Estoque insuficiente para este produto");
-  }
-}
-
+// 🔹 Atualizar estoque
 export const updateStock = async (req: Request, res: Response) => {
+  const idValidated = validateRequest(idParamSchema, req, res, "params");
+  if (!idValidated) return;
+
+  const bodyValidated = validateRequest(updateStockSchema, req, res);
+  if (!bodyValidated) return;
+
   try {
-    const { id } = req.params;
-    const { quantity } = req.body;
-
-    if (!quantity || quantity <= 0) {
-      return res.status(400).json({ error: "Quantidade inválida" });
-    }
-
-    await decrementStock(Number(id), quantity);
-
+    await decrementStockService({ productId: idValidated.id, quantity: bodyValidated.quantity });
     res.json({ message: "Estoque atualizado com sucesso" });
-  } catch (error: any) {
-    console.error(error);
-    res.status(400).json({ error: error.message || "Erro ao atualizar estoque" });
+  } catch (err: any) {
+    res.status(400).json({ success: false, errors: [{ field: "server", message: err.message }] });
   }
 };
 
+// 🔹 Deletar produto
 export const deleteProduct = async (req: Request, res: Response) => {
+  const validated = validateRequest(idParamSchema, req, res, "params");
+  if (!validated) return;
+
   try {
-    const { id } = req.params;
-
-    await prisma.product.delete({
-      where: { id: Number(id) },
-    });
-
+    await deleteProductService(validated.id);
     res.json({ message: "Produto deletado com sucesso" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao deletar produto" });
+  } catch (err: any) {
+    res.status(500).json({ success: false, errors: [{ field: "server", message: err.message }] });
   }
 };

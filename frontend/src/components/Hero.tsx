@@ -1,36 +1,35 @@
-
-export default function Hero(): React.JSX.Element {  return (
+export default function Hero(): React.JSX.Element {
+  return (
     <section className="hero" aria-labelledby="hero-title">
-      {/* barras laterais finas */}
-      <div className="sidebar left" aria-hidden></div>
-      <div className="sidebar right" aria-hidden></div>
-
-      {/* destaque da marca (trapezio invertido) */}
-      <div className="highlight" id="hero-title">
-        <div className="highlight-inner">
-          <span className="highlight-text">HardTrap</span>
-        </div>
-      </div>
-
+      <div className="sidebar left"></div>
+      <div className="sidebar right"></div>
+      
       <div className="hero-content">
         <div className="banners">
           <div className="banner-wrap">
-            <img src="/assets/banner.png" alt="Banner NEW DROP" className="banner" />
-            <div className="new-drop">NEW DROP</div>
-          </div>
-
-          <div className="banner-wrap">
-            <img src="/assets/banner.png" alt="Banner NEW DROP" className="banner" />
-            <div className="new-drop">NEW DROP</div>
-          </div>
-
-          <div className="banner-wrap">
-            <img src="/assets/banner.png" alt="Banner NEW DROP" className="banner" />
-            <div className="new-drop">NEW DROP</div>
+            <img
+              src="/assets/banner.png"
+              alt="Banner HardTrap"
+              className="banner"
+            />
+                        <img
+              src="/assets/banner.png"
+              alt="Banner HardTrap"
+              className="banner"
+            />
+                        <img
+              src="/assets/banner.png"
+              alt="Banner HardTrap"
+              className="banner"
+            />
           </div>
         </div>
 
-        <img src="/assets/logo.png" alt="Mascote HardTrap" className="mascot" />
+        <img
+          src="/assets/logo.png"
+          alt="Mascote HardTrap"
+          className="mascot"
+        />
       </div>
     </section>
   );
