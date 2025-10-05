@@ -39,6 +39,10 @@
         {
             "folderPath": "HARDTRAP\\backend\\src\\utils\\updateAdmin.ts\\",
             "color": "foldercolorizer.color_0066ff"
+        },
+        {
+            "folderPath": "HARDTRAP\\backend\\src\\config\\cors.config.ts\\",
+            "color": "foldercolorizer.color_6666cc"
         }
     ]
 }

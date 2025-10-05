@@ -48,12 +48,17 @@ export const addItemToCart = async (userId: number, productId: number, quantity:
       create: { user_id: userId },
     });
 
-    await prisma.cartItem.create({
+    const cartItem = await prisma.cartItem.create({
       data: { cart_id: cart.id, product_id: productId, quantity },
     });
 
-    logger.info("Produto adicionado ao carrinho", { userId, productId, quantity });
-    return { message: "Produto adicionado ao carrinho" };
+    logger.info("Produto adicionado ao carrinho", { userId, productId, quantity, cartItemId: cartItem.id });
+
+    // 🔹 Retorna híbrido: mensagem + dados completos
+    return {
+      message: "Produto adicionado ao carrinho",
+      ...cartItem,
+    };
   } catch (err: any) {
     logger.error("Erro ao adicionar item ao carrinho", {
       error: err.message,
@@ -73,10 +78,15 @@ export const removeItemFromCart = async (userId: number, itemId: number) => {
       throw new Error("Carrinho não encontrado");
     }
 
-    await prisma.cartItem.deleteMany({ where: { id: itemId, cart_id: cart.id } });
+    const deleted = await prisma.cartItem.deleteMany({ where: { id: itemId, cart_id: cart.id } });
 
     logger.info("Item removido do carrinho", { userId, itemId, cartId: cart.id });
-    return { message: "Item removido do carrinho" };
+
+    // 🔹 Retorna híbrido: mensagem + contagem
+    return {
+      message: "Item removido do carrinho",
+      removedCount: deleted.count,
+    };
   } catch (err: any) {
     logger.error("Erro ao remover item do carrinho", { error: err.message, userId, itemId });
     throw err;

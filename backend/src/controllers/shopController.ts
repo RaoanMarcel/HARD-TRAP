@@ -1,10 +1,8 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import * as cartService from "../services/cart.service";
 import * as orderService from "../services/order.service";
 import * as paymentService from "../services/payment.service";
-
-// ==================== CART ====================
 
 export const getCart = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
@@ -22,8 +20,9 @@ export const addToCart = async (req: AuthRequest, res: Response) => {
   const { productId, quantity } = req.body;
 
   try {
-    const result = await cartService.addItemToCart(userId, productId, quantity);
-    res.json(result);
+    // 🔹 Retorna o objeto completo do CartItem criado
+    const cartItem = await cartService.addItemToCart(userId, productId, quantity);
+    res.json(cartItem);
   } catch (err: any) {
     console.error(err);
     res.status(400).json({ error: err.message });
@@ -42,8 +41,6 @@ export const removeFromCart = async (req: AuthRequest, res: Response) => {
     res.status(400).json({ error: err.message });
   }
 };
-
-// ==================== ORDER ====================
 
 export const checkoutCart = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
@@ -95,14 +92,15 @@ export const getOrderById = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// ==================== PAYMENT ====================
-
 export const createStripePayment = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const { orderId } = req.body;
 
   try {
-    const paymentIntent = await paymentService.createStripePaymentIntent(userId, Number(orderId));
+    const paymentIntent = await paymentService.createStripePaymentIntent(
+      userId,
+      Number(orderId)
+    );
     res.json(paymentIntent);
   } catch (err: any) {
     console.error(err);

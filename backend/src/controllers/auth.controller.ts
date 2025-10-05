@@ -36,7 +36,12 @@ const loginSchema = Joi.object({
 // 🔹 Registrar usuário
 export const register = async (req: Request, res: Response) => {
   const validated = validateRequest(registerSchema, req, res);
-  if (!validated) return;
+  if (!validated) {
+    return res.status(400).json({
+      success: false,
+      errors: [{ field: "validation", message: "Dados inválidos" }],
+    });
+  }
 
   try {
     const user = await registerUserService(validated);
@@ -45,14 +50,22 @@ export const register = async (req: Request, res: Response) => {
       user,
     });
   } catch (err: any) {
-    res.status(400).json({ success: false, errors: [{ field: "server", message: err.message || "Erro ao registrar usuário" }] });
+    res.status(400).json({
+      success: false,
+      errors: [{ field: "server", message: err.message || "Erro ao registrar usuário" }],
+    });
   }
 };
 
 // 🔹 Login de usuário
 export const login = async (req: Request, res: Response) => {
   const validated = validateRequest(loginSchema, req, res);
-  if (!validated) return;
+  if (!validated) {
+    return res.status(400).json({
+      success: false,
+      errors: [{ field: "validation", message: "Dados inválidos" }],
+    });
+  }
 
   try {
     const result = await loginUserService(validated);
@@ -61,6 +74,9 @@ export const login = async (req: Request, res: Response) => {
       ...result,
     });
   } catch (err: any) {
-    res.status(400).json({ success: false, errors: [{ field: "server", message: err.message || "Erro ao realizar login" }] });
+    res.status(400).json({
+      success: false,
+      errors: [{ field: "server", message: err.message || "Erro ao realizar login" }],
+    });
   }
 };

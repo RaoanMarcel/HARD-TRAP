@@ -7,6 +7,7 @@ import {
   getActiveProducts,
   getAllProducts
 } from "../controllers/admin.controller";
+import { getDashboard } from "../controllers/adminDashboard.controller";
 
 const router = Router();
 
@@ -19,5 +20,7 @@ router.put("/products/:id/stock", adminAuth, updateProductStock);
 router.get("/products/active", adminAuth, getActiveProducts);
 
 router.get("/products", adminAuth, getAllProducts);
+
+router.get("/dashboard", adminAuth, getDashboard);
 
 export default router;

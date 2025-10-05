@@ -1,22 +1,30 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { Response, NextFunction } from "express";
+import { verify } from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
+import { AuthenticatedRequest } from "../types/authenticatedRequest";
 
 const prisma = new PrismaClient();
+ 
+export const adminAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: "Token ausente" });
+  }
 
-export const adminAuth = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "Token ausente" });
+  const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number };
+    const decoded: any = verify(token, process.env.JWT_SECRET!);
+
     const user = await prisma.users.findUnique({ where: { id: decoded.userId } });
+
     if (!user || user.role !== "ADMIN") {
       return res.status(403).json({ error: "Acesso negado" });
     }
-    (req as any).user = user;
+
+    req.user = { id: user.id, role: user.role };
     next();
-  } catch {
+  } catch (err) {
     return res.status(401).json({ error: "Token inválido" });
   }
 };
