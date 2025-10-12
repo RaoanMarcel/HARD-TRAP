@@ -58,6 +58,7 @@ export const register = async (req: Request, res: Response) => {
 };
 
 // 🔹 Login de usuário
+// 🔹 Login de usuário
 export const login = async (req: Request, res: Response) => {
   const validated = validateRequest(loginSchema, req, res);
   if (!validated) {
@@ -71,7 +72,7 @@ export const login = async (req: Request, res: Response) => {
     const result = await loginUserService(validated);
     res.status(200).json({
       message: "Login realizado com sucesso",
-      ...result,
+      token: result.token, // 🔹 devolve só o token
     });
   } catch (err: any) {
     res.status(400).json({

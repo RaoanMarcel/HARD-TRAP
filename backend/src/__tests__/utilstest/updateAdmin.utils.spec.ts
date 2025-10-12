@@ -35,7 +35,7 @@ describe("updateAdmin script", () => {
     await main();
 
     expect(updateMock).toHaveBeenCalledWith({
-      where: { email: "raoanmarcel@gmail.com" },
+      where: { email: "raoanmarcel@admin.com" },
       data: { role: "ADMIN" },
     });
     expect(logSpy).toHaveBeenCalledWith(

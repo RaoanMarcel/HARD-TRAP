@@ -8,6 +8,9 @@ import {
   getAllProducts
 } from "../controllers/admin.controller";
 import { getDashboard } from "../controllers/adminDashboard.controller";
+import { getUsers, getUserById, updateUser, deleteUser } from "../controllers/adminUser.controller";
+import { getOrders, getOrderById, updateOrderStatus } from "../controllers/adminOrders.controller";
+import { getPayments, getPaymentById, updatePaymentStatus } from "../controllers/adminPayments.controller";
 
 const router = Router();
 
@@ -22,5 +25,27 @@ router.get("/products/active", adminAuth, getActiveProducts);
 router.get("/products", adminAuth, getAllProducts);
 
 router.get("/dashboard", adminAuth, getDashboard);
+
+router.get("/users", adminAuth, getUsers);
+
+router.get("/users/:id", adminAuth, getUserById);
+
+router.put("/users/:id", adminAuth, updateUser);
+
+router.delete("/users/:id", adminAuth, deleteUser);
+
+router.get("/orders", adminAuth, getOrders);
+
+router.get("/orders/:id", adminAuth, getOrderById);
+
+router.put("/orders/:id/status", adminAuth, updateOrderStatus);
+
+router.get("/payments", getPayments);
+
+router.get("/payments/:id", getPaymentById);
+
+router.put("/payments/:id/status", updatePaymentStatus);
+
+
 
 export default router;

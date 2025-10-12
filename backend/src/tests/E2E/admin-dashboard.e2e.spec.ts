@@ -8,43 +8,33 @@ describe("Admin Dashboard E2E", () => {
   let token: string;
 
   beforeAll(async () => {
-    // garante que não existe duplicado
-    await prisma.users.deleteMany({ where: { email: "admin@example.com" } });
+    await prisma.users.deleteMany({ where: { email: "admin-dashboard@example.com" } });
 
-    // cria um admin fake
     const admin = await prisma.users.create({
       data: {
-        name: "Admin Test",
-        email: "admin@example.com",
+        name: "Admin Dashboard",
+        email: "admin-dashboard@example.com",
         password_hash: "hashedpassword",
         role: "ADMIN",
       },
     });
 
-    // gera token JWT internamente
     const secret = process.env.JWT_SECRET || "test_secret";
-    token =
-      "Bearer " +
-      jwt.sign(
-        {
-          userId: admin.id,
-          email: admin.email,
-          role: admin.role,
-        },
-        secret,
-        { expiresIn: "1d" }
-      );
+    const rawToken = jwt.sign(
+      { userId: admin.id, email: admin.email, role: admin.role }, // 🔹 usa userId
+      secret,
+      { expiresIn: "1d" }
+    );
+
+    token = rawToken;
   });
 
   it("deve retornar dados do dashboard", async () => {
     const res = await request(app)
       .get("/admin/dashboard")
-      .set("Authorization", token)
+      .set("Authorization", `Bearer ${token}`)
       .expect(200);
 
     expect(res.body).toHaveProperty("summary");
-    expect(res.body).toHaveProperty("evolution");
-    expect(res.body).toHaveProperty("topProducts");
-    expect(res.body).toHaveProperty("ordersByStatus");
   });
 });

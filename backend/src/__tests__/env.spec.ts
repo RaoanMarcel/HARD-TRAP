@@ -93,7 +93,7 @@ describe("env.ts", () => {
       MELHOR_ENVIO_SANDBOX: "true",
     };
 
-    await expect(import("../env")).rejects.toThrow(
+    await expect(import("..//env")).rejects.toThrow(
       "[ENV ERROR] Variável obrigatória não definida: DATABASE_URL"
     );
   });
